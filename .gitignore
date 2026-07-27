@@ -1,0 +1,33 @@
+# 敏感信息
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+
+# 本地数据
+backend/app/storage/
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Playwright
+.playwright-mcp/
+
+# OS
+Thumbs.db
+.DS_Store

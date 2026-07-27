@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #FAF3E8;
+  --color-panel: #FFFBF5;
+  --color-accent: #E8594A;
+  --color-accent-hover: #D04A3C;
+  --color-amber: #D4943A;
+  --color-ink: #2C2416;
+  --color-ink-soft: #5A4F3F;
+  --color-ink-muted: #8B7E6A;
+  --color-border: #E8DDD0;
+  --color-success: #5B8C5A;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--color-ink);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
+
+/* Custom scrollbar for Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}

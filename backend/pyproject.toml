@@ -1,0 +1,30 @@
+[project]
+name = "douyinrag"
+version = "0.1.0"
+description = "抖音收藏夹 RAG 知识库"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "chromadb>=1.5",
+    "dashscope>=1.20",
+    "openai>=1.60",
+    "httpx>=0.28",
+    "yt-dlp>=2024.0",
+    "playwright>=1.50",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "loguru>=0.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.28",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

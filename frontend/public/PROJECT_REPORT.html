@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DouyinMind · 项目技术报告</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAF3E8; --panel: #FFFBF5; --accent: #E8594A; --accent-hover: #D04A3C;
+  --amber: #D4943A; --ink: #2C2416; --ink-soft: #5A4F3F; --ink-muted: #8B7E6A;
+  --border: #E8DDD0; --success: #5B8C5A; --radius: 14px; --radius-lg: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background: var(--bg); color: var(--ink); line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.hero {
+  background: linear-gradient(135deg, #E8594A 0%, #D04A3C 40%, #D4943A 100%);
+  color: #fff; padding: 80px 40px 60px; text-align: center;
+}
+.hero h1 { font-family: 'ZCOOL XiaoWei',serif; font-size: 52px; margin-bottom: 12px; }
+.hero p { font-size: 18px; opacity: 0.9; max-width: 640px; margin: 0 auto; }
+.container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px; margin-bottom: 32px;
+  box-shadow: 0 8px 30px rgba(44,36,22,0.06);
+}
+.card h2 {
+  font-family: 'ZCOOL XiaoWei',serif; font-size: 28px; color: var(--accent);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border);
+}
+.card h3 { font-size: 18px; color: var(--ink-soft); margin: 20px 0 10px; }
+.badge {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; margin-right: 6px;
+}
+.badge-red { background: rgba(232,89,74,0.12); color: var(--accent); }
+.badge-green { background: rgba(91,140,90,0.12); color: var(--success); }
+.badge-amber { background: rgba(212,148,58,0.12); color: var(--amber); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+tr:hover { background: rgba(0,0,0,0.02); }
+.tag { font-family: 'Courier New',monospace; font-size: 13px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; }
+.mermaid { display: flex; justify-content: center; margin: 24px 0; }
+.fix-card {
+  border-left: 4px solid var(--accent); padding: 16px 20px;
+  background: rgba(232,89,74,0.04); border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 16px;
+}
+.fix-card h4 { font-size: 15px; color: var(--accent); margin-bottom: 6px; }
+.fix-card .result { color: var(--success); font-weight: 600; font-size: 13px; }
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before { content:''; position:absolute; left:12px; top:0; bottom:0; width:2px; background:var(--border); }
+.tl-item { position: relative; margin-bottom: 28px; }
+.tl-item::before { content:''; position:absolute; left:-24px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--accent); }
+.tl-item h4 { font-size: 16px; margin-bottom: 4px; }
+.tl-item p { font-size: 14px; color: var(--ink-soft); }
+.chart-box { width: 100%; height: 360px; margin: 20px 0; }
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin: 20px 0; }
+.stat-card { text-align: center; padding: 20px; background: var(--bg); border-radius: var(--radius); }
+.stat-card .num { font-size: 32px; font-weight: 700; color: var(--accent); font-family: 'ZCOOL XiaoWei',serif; }
+.stat-card .label { font-size: 13px; color: var(--ink-muted); margin-top: 4px; }
+.footer { text-align: center; padding: 40px; color: var(--ink-muted); font-size: 13px; border-top: 1px solid var(--border); }
+ul { padding-left: 20px; }
+li { margin: 6px 0; color: var(--ink-soft); font-size: 14px; }
+@media (max-width: 768px) { .stats-row { grid-template-columns: repeat(2,1fr); } .container { padding: 20px 12px; } }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>DouyinMind 项目技术报告</h1>
+  <p>抖音收藏夹 RAG 知识库 — 把"收藏"变成可对话的 AI 知识库</p>
+  <p style="margin-top:16px;font-size:14px;opacity:0.7;">2026-07-21 · v0.1.0</p>
+</section>
+
+<div class="container">
+
+<!-- 项目概览 -->
+<div class="card">
+  <h2>📋 项目概览</h2>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">14</div><div class="label">API 接口</div></div>
+    <div class="stat-card"><div class="num">10</div><div class="label">后端服务</div></div>
+    <div class="stat-card"><div class="num">5</div><div class="label">数据表</div></div>
+    <div class="stat-card"><div class="num">24</div><div class="label">测试用例</div></div>
+  </div>
+  <p style="margin-top:16px;font-size:15px;color:var(--ink-soft);">
+    本项目的核心流程：<strong>登录抖音 → 拉取收藏夹 → 下载音频 → 语音转写(ASR) → 文本切块 → 向量化 → RAG 对话问答</strong>。
+    以 <span class="badge badge-red">Jonesxq/douyin_RAG</span> 为主要参考，综合 <span class="badge badge-amber">lys2-14</span> 和 <span class="badge badge-red">via007</span> 的优点。
+  </p>
+  <div class="mermaid">
+flowchart LR
+  A[🔐 扫码登录] --> B[📁 同步收藏夹]
+  B --> C[📥 下载音频]
+  C --> D[🎤 DashScope ASR]
+  D --> E[✂️ 文本切块]
+  E --> F[🧮 Embedding 向量化]
+  F --> G[💾 ChromaDB 存储]
+  G --> H[💬 RAG 对话问答]
+  style A fill:#E8594A,color:#fff
+  style H fill:#5B8C5A,color:#fff
+  style D fill:#D4943A,color:#fff
+  style F fill:#D4943A,color:#fff
+  style G fill:#2C2416,color:#fff
+  </div>
+</div>
+
+<!-- 技术栈 -->
+<div class="card">
+  <h2>🛠 技术栈详解</h2>
+
+  <h3>后端框架：FastAPI + Uvicorn</h3>
+  <p>三个参考项目<a href="https://github.com/Jonesxq/douyin_RAG">Jonesxq</a>、<a href="https://github.com/lys2-14/douyin-knowledge-rag">lys2-14</a>、<a href="https://github.com/via007/bilibili-rag">via007</a> 全部使用这套组合。<strong>一致选择，无需犹豫。</strong>自动生成 Swagger 文档（<code>/docs</code>），异步支持好，适合 I/O 密集的 RAG 场景（文件下载、API 调用、数据库读写）。</p>
+
+  <h3>数据库：SQLAlchemy 2.0 + SQLite</h3>
+  <p>本地零配置，个人项目最佳选择。三个参考项目全部使用 SQLite。最初设计了 <code>aiosqlite</code> 异步方案，但 Jonesxq 全部用同步 Session，为保持一致性改为同步引擎——SQLite 本身就是单写入者，异步收益有限。</p>
+
+  <h3>向量库：ChromaDB</h3>
+  <p>三个参考项目全部使用 ChromaDB。本地持久化、零运维、Python 原生 API。支持 cosine 距离 + MMR 检索。相比 Milvus/Qdrant，ChromaDB 更适合单机小规模场景（数千到数万条 chunk）。</p>
+
+  <h3>LLM：DeepSeek <span class="badge badge-amber">用户指定</span></h3>
+  <p>用户明确选择 DeepSeek。兼容 OpenAI 协议，<code>base_url</code> 一切即可切换。中文能力强、价格低、速度快。对比：Qwen（Jonesxq 默认）和 DashScope 百炼（via007 默认）也是可选方案。</p>
+
+  <h3>Embedding：DashScope text-embedding-v4 <span class="badge badge-amber">用户指定</span></h3>
+  <p>云端方案，即开即用，无需下载模型。输出 1024 维向量。对比方案：本地 BGE-small-zh-v1.5（Jonesxq 和 lys2-14 默认，400MB 下载，512 维，零费用）。用户选择云端是看重免下载和速度。</p>
+
+  <h3>ASR：DashScope paraformer-realtime-v2 <span class="badge badge-amber">用户指定</span></h3>
+  <p>云端语音识别。最初尝试 <code>Transcription.async_call</code> + file:// 协议遇到 DECODE_ERROR，切换为 <code>Recognition.call</code> API 解决。对比方案：faster-whisper（Jonesxq 和 lys2-14 默认，150MB 下载，CPU 可跑，零费用）。用户明确拒绝切换到本地方案。</p>
+
+  <h3>音频下载：yt-dlp + ffmpeg</h3>
+  <p>yt-dlp 是 youtube-dl 的活跃 fork，支持抖音视频下载。ffmpeg 用于提取音频流、转码为标准 WAV（16kHz 单声道 PCM），确保 DashScope ASR 可识别。三个参考项目全部使用这套组合。</p>
+
+  <h3>浏览器自动化：Playwright + Chromium</h3>
+  <p>用于抖音扫码登录。Playwright 比 Selenium 更快、API 更现代。三个参考项目全部使用 Playwright。支持持久化上下文（保留 Cookie + localStorage）、反检测脚本（隐藏 webdriver）。</p>
+
+  <h3>前端：React 19 + Vite + TypeScript + Tailwind CSS</h3>
+  <p>Vite 比 CRA 快 10x+。Tailwind CSS 的 utility-first 方式适合快速原型。暖色系配色（奶油底色 + 珊瑚红主色 + 琥珀辅色）通过 Tailwind 配置和 CSS 变量实现，匹配 Pencil 设计稿。</p>
+
+  <h3>总结</h3>
+  <table>
+    <tr><th>决策方式</th><th>技术</th></tr>
+    <tr><td><span class="badge badge-green">参考项目一致</span></td><td>FastAPI, SQLAlchemy+SQLite, ChromaDB, yt-dlp+ffmpeg, Playwright, pytest</td></tr>
+    <tr><td><span class="badge badge-amber">用户指定</span></td><td>DeepSeek (LLM), DashScope (ASR+Embedding)</td></tr>
+    <tr><td><span class="badge badge-red">自行选择</span></td><td>React 19 + Vite + Tailwind, Pencil 设计工具, uv 包管理</td></tr>
+  </table>
+</div>
+
+<!-- 开发阶段 -->
+<div class="card">
+  <h2>🚀 技术实现路线</h2>
+  <div class="timeline">
+    <div class="tl-item">
+      <h4>阶段 1：项目初始化 + 后端骨架</h4>
+      <p>创建 28 个 Python 文件，FastAPI 入口 + Pydantic 配置 + loguru 日志 + 5 张数据表 ORM。参照 Jonesxq 的标准分层：core/db/models/schemas/api/services。</p>
+    </div>
+    <div class="tl-item">
+      <h4>阶段 2：认证 + 收藏夹同步</h4>
+      <p>Playwright 扫码登录 → Cookie 保存 → Webpack collects 模块 API 抓取收藏夹和视频列表 → 差异同步到 SQLite。遇到 <span class="badge badge-red">statusCode: 8</span> 鉴权失败，最终改为<strong>登录+抓取一体化</strong>（不关浏览器直接抓取）。</p>
+    </div>
+    <div class="tl-item">
+      <h4>阶段 3：知识库入库流水线</h4>
+      <p>yt-dlp 下载音频 → ffmpeg 转 16kHz WAV → DashScope ASR 转写 → 固定大小切块（1000字/200重叠）→ DashScope Embedding → 存入 ChromaDB。后台 worker 线程串行处理。</p>
+    </div>
+    <div class="tl-item">
+      <h4>阶段 4：RAG 对话引擎</h4>
+      <p>查询路由（问候/列表/总结/向量检索）→ 向量语义检索 → 上下文构建 + 历史对话注入 → DeepSeek LLM 生成 → 答案后处理。支持非流式 + SSE 流式双模式。完整的 ChatSession + ChatMessage 会话管理。</p>
+    </div>
+    <div class="tl-item">
+      <h4>阶段 5：前端界面</h4>
+      <p>Pencil 设计稿先行 → React 19 + Tailwind CSS 暖色系。Landing 页（Hero + 流程示意）→ 登录弹窗（QR码轮询）→ 双栏 Workspace（收藏夹+入库+对话）→ Collection Detail。双栏可拖拽分隔条，对话流式输出 + 来源引用。</p>
+    </div>
+    <div class="tl-item">
+      <h4>阶段 6：测试 + 文档</h4>
+      <p>pytest 24 个用例覆盖文本处理 + RAG 路由 + 答案清洗。README.md 完整文档。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 系统架构 -->
+<div class="card">
+  <h2>🏗 系统架构</h2>
+  <div class="mermaid">
+graph TB
+  subgraph Frontend["🖥 前端 (React 19 + Vite)"]
+    LP[Landing Page]
+    WS[Workspace 双栏]
+    LM[Login Modal]
+  end
+  subgraph Backend["⚙️ 后端 (FastAPI)"]
+    direction TB
+    API[API Routes 14 endpoints]
+    Auth[Auth] --- Fav[Favorites]
+    Fav --- Know[Knowledge]
+    Know --- Chat[Chat]
+  end
+  subgraph Services["🔧 服务层"]
+    DC[DouyinCollector] --- FS[FavoritesService]
+    FS --- MS[MediaService]
+    MS --- ASR[ASRService]
+    ASR --- TP[TextProcessing]
+    TP --- CS[ChromaService]
+    CS --- RS[RAGService]
+    RS --- LS[LLMService]
+  end
+  subgraph Storage["💾 存储层"]
+    SQL[(SQLite)]
+    Chroma[(ChromaDB)]
+    Audio[音频缓存]
+  end
+  subgraph Cloud["☁️ 云服务"]
+    DS[DeepSeek LLM]
+    DashScope[ DashScope ASR+Embedding ]
+  end
+  Frontend -->|HTTP/SSE| Backend
+  Backend --> Services
+  Services --> Storage
+  Services -->|API Call| Cloud
+  style Frontend fill:#E8594A,color:#fff
+  style Backend fill:#D4943A,color:#fff
+  style Services fill:#5B8C5A,color:#fff
+  style Storage fill:#2C2416,color:#fff
+  style Cloud fill:#8B7E6A,color:#fff
+  </div>
+</div>
+
+<!-- API 接口 -->
+<div class="card">
+  <h2>📡 API 接口</h2>
+  <table>
+    <tr><th>方法</th><th>路径</th><th>说明</th><th>阶段</th></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/auth/douyin/login/start</td><td>启动扫码登录</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/auth/douyin/login/status</td><td>查询登录状态</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/auth/douyin/logout</td><td>退出登录</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/favorites/sync</td><td>同步收藏夹到数据库</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/favorites/collections</td><td>收藏夹列表</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/favorites/collections/{id}/videos</td><td>视频列表（分页）</td><td><span class="badge badge-red">2</span></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/knowledge/sync</td><td>触发后台入库任务</td><td><span class="badge badge-amber">3</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/knowledge/sync/{task_id}</td><td>查询入库进度</td><td><span class="badge badge-amber">3</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/knowledge/stats</td><td>知识库统计</td><td><span class="badge badge-amber">3</span></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/chat/ask</td><td>非流式 RAG 问答</td><td><span class="badge badge-green">4</span></td></tr>
+    <tr><td><span class="tag">POST</span></td><td>/api/chat/ask/stream</td><td>SSE 流式问答</td><td><span class="badge badge-green">4</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/chat/sessions</td><td>对话会话列表</td><td><span class="badge badge-green">4</span></td></tr>
+    <tr><td><span class="tag">GET</span></td><td>/api/chat/sessions/{id}/messages</td><td>会话消息历史</td><td><span class="badge badge-green">4</span></td></tr>
+    <tr><td><span class="tag">DELETE</span></td><td>/api/chat/sessions/{id}</td><td>删除会话</td><td><span class="badge badge-green">4</span></td></tr>
+  </table>
+</div>
+
+<!-- 数据处理流水线 -->
+<div class="card">
+  <h2>⚡ 数据处理流水线</h2>
+  <div class="mermaid">
+flowchart TD
+  A[用户点击入库] --> B[Worker 拉取 pending 视频]
+  B --> C[yt-dlp 下载音频流]
+  C --> D[ffmpeg 转码 16kHz WAV]
+  D --> E[DashScope ASR 转写]
+  E --> F{转写结果?}
+  F -->|有内容| G[固定大小切块<br/>1000字/200重叠]
+  F -->|无内容| X[标记 failed]
+  G --> H[DashScope Embedding<br/>text-embedding-v4]
+  H --> I[存入 ChromaDB]
+  I --> J[标记 done]
+  style A fill:#E8594A,color:#fff
+  style J fill:#5B8C5A,color:#fff
+  style X fill:#D04A3C,color:#fff
+  style E fill:#D4943A,color:#fff
+  style H fill:#D4943A,color:#fff
+  </div>
+  <h3>RAG 问答流程</h3>
+  <div class="mermaid">
+flowchart LR
+  Q[用户提问] --> R[查询路由]
+  R -->|问候| D1[直接回复]
+  R -->|列表| D2[DB 清单查询]
+  R -->|总结| D3[DB 内容概览]
+  R -->|其他| D4[向量语义检索]
+  D4 --> CTX[构建上下文<br/>+ 历史对话注入]
+  CTX --> LLM[DeepSeek LLM 生成]
+  LLM --> POST[答案后处理<br/>清洗 + 口语化]
+  POST --> OUT[返回回答 + 来源引用]
+  style Q fill:#E8594A,color:#fff
+  style OUT fill:#5B8C5A,color:#fff
+  style LLM fill:#2C2416,color:#fff
+  </div>
+</div>
+
+<!-- 数据模型 -->
+<div class="card">
+  <h2>🗃 数据模型</h2>
+  <div class="mermaid">
+erDiagram
+  FavoriteCollection {
+    int id PK
+    string platform_collection_id
+    string title
+    int video_count
+    bool is_active
+  }
+  FavoriteVideo {
+    int id PK
+    int collection_id FK
+    string platform_item_id
+    string title
+    string author
+    int duration
+    bool is_active
+  }
+  VideoCache {
+    int id PK
+    string platform_item_id
+    string title
+    text transcript_text
+    string status
+    text error_message
+  }
+  ChatSession {
+    int id PK
+    string title
+  }
+  ChatMessage {
+    int id PK
+    int session_id FK
+    string role
+    text content
+    string route_type
+    int latency_ms
+  }
+  FavoriteCollection ||--o{ FavoriteVideo : contains
+  FavoriteVideo ||--o| VideoCache : caches
+  ChatSession ||--o{ ChatMessage : has
+  </div>
+</div>
+
+<!-- 踩坑记录 -->
+<div class="card">
+  <h2>🐛 踩坑记录</h2>
+
+  <div class="fix-card">
+    <h4>问题 1：statusCode: 8 — Webpack API 鉴权失败</h4>
+    <p>扫码登录后，同步收藏夹时 Webpack collects 模块 API 返回 <span class="tag">statusCode: 8</span>。</p>
+    <p><strong>根因：</strong>登录用持久化浏览器上下文，抓取时新建浏览器上下文只加载 Cookie，丢失了 localStorage。且调试过程中不慎将空登录态的 <span class="tag">state.json</span> 写回覆盖了有效 Cookie。</p>
+    <p class="result">✅ 解决：登录和抓取改为<strong>同一持久化上下文</strong>中完成，不关浏览器直接抓取。</p>
+  </div>
+
+  <div class="fix-card">
+    <h4>问题 2：DECODE_ERROR — DashScope 无法解码音频</h4>
+    <p>DashScope Transcription API + file:// 协议返回 <span class="tag">DECODE_ERROR</span>。</p>
+    <p><strong>根因：</strong>DashScope 服务器无法访问本地 file:// URL，且 yt-dlp 产生的 mp3 格式不被识别。</p>
+    <p class="result">✅ 解决：改用 <span class="tag">Recognition API + paraformer-realtime-v2</span>（支持本地文件路径），并用 ffmpeg 转码为 <strong>16kHz 单声道 PCM WAV</strong>。</p>
+  </div>
+
+  <div class="fix-card">
+    <h4>问题 3：Webpack no_require — 模块未加载</h4>
+    <p>Cookie 注入方式切换后出现 <span class="tag">no_webpack_require</span>。</p>
+    <p><strong>根因：</strong>Playwright 的 <span class="tag">add_init_script</span> 必须在 <span class="tag">page.goto()</span> 之前调用，之前放在了导航之后。且直接跳转收藏夹页时 Webpack 未完全加载。</p>
+    <p class="result">✅ 解决：先导航到首页等 Webpack 加载，init_script 前置，刷新使 Cookie + 反检测生效。</p>
+  </div>
+
+  <div class="fix-card">
+    <h4>问题 4：yt-dlp Cookie 过期 <span class="badge badge-amber">待解决</span></h4>
+    <p>部分视频 yt-dlp 下载时报 <span class="tag">Fresh cookies are needed</span>。</p>
+    <p><strong>根因：</strong>Playwright 导出到 Netscape 格式的 Cookie 文件对部分视频不生效，抖音可能对 yt-dlp 做了额外校验。</p>
+    <p>可能方案：① 用 Playwright 拦截页面直接获取音频 URL ② 升级 yt-dlp ③ 用抖音官方下载 API</p>
+  </div>
+</div>
+
+<!-- 项目统计图表 -->
+<div class="card">
+  <h2>📊 代码统计</h2>
+  <div id="codeChart" class="chart-box"></div>
+</div>
+
+<!-- 待完成 -->
+<div class="card">
+  <h2>📝 待完成事项</h2>
+  <table>
+    <tr><th>优先级</th><th>事项</th><th>说明</th></tr>
+    <tr><td><span class="badge badge-red">P0</span></td><td>修复 yt-dlp Cookie 下载问题</td><td>改 Playwright 拦截媒体 URL 方案</td></tr>
+    <tr><td><span class="badge badge-red">P0</span></td><td>完善错误提示</td><td>前端 Toast 通知 + 加载动画 + 流式逐字输出</td></tr>
+    <tr><td><span class="badge badge-amber">P1</span></td><td>查询改写</td><td>LLM 改写用户问题提升检索召回率</td></tr>
+    <tr><td><span class="badge badge-amber">P1</span></td><td>混合检索 + RRF</td><td>Dense 向量 + 关键词 FTS 融合排序</td></tr>
+    <tr><td><span class="badge badge-amber">P1</span></td><td>收藏夹自动同步</td><td>定时检测新增/删除视频</td></tr>
+    <tr><td><span class="badge badge-green">P2</span></td><td>Docker 部署</td><td>docker-compose 一键启动</td></tr>
+    <tr><td><span class="badge badge-green">P2</span></td><td>Markdown 导出</td><td>导出视频内容/AI 笔记</td></tr>
+  </table>
+</div>
+
+</div>
+
+<div class="footer">
+  <p>DouyinMind © 2026 · 基于抖音收藏夹构建 · AI 驱动</p>
+</div>
+
+<script>
+mermaid.initialize({ startOnLoad: true, theme: 'base', themeVariables: {
+  primaryColor: '#FAF3E8', primaryBorderColor: '#E8DDD0', primaryTextColor: '#2C2416',
+  lineColor: '#E8594A', secondaryColor: '#FFFBF5', tertiaryColor: '#FFFBF5'
+}});
+
+// Code statistics chart
+(function(){
+  var c = echarts.init(document.getElementById('codeChart'));
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, textStyle: { color: '#8B7E6A' } },
+    grid: { left: 40, right: 20, top: 20, bottom: 40 },
+    xAxis: { type: 'category', data: ['config','entities','douyin_collector','favorites_service','media_service','asr_service','text_processing','chroma_service','llm_service','knowledge_service','rag_service','worker','App.tsx','api.ts','ChatPanel','SourcesPanel','LandingPage','LoginModal','Workspace'], axisLabel: { rotate: 45, fontSize: 10, color: '#8B7E6A' } },
+    yAxis: { type: 'value', name: '行数', nameTextStyle: { color: '#8B7E6A' } },
+    series: [{
+      name: 'Python', type: 'bar', data: [112,190,310,280,160,65,160,175,130,170,320,60,0,0,0,0,0,0,0],
+      itemStyle: { color: '#E8594A', borderRadius: [4,4,0,0] }
+    },{
+      name: 'TypeScript/React', type: 'bar', data: [0,0,0,0,0,0,0,0,0,0,0,0,70,200,160,130,60,60,90],
+      itemStyle: { color: '#D4943A', borderRadius: [4,4,0,0] }
+    }]
+  });
+})();
+</script>
+</body>
+</html>
