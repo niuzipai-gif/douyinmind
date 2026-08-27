@@ -18,7 +18,7 @@ frontend/dist/
 # 本地数据
 backend/app/storage/
 logs/
-app/
+/app/
 
 # TypeScript build metadata
 *.tsbuildinfo
