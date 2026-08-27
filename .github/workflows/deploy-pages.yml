@@ -30,7 +30,7 @@ jobs:
         working-directory: frontend
         env:
           GITHUB_PAGES_BUILD: true
-          VITE_API_BASE_URL: https://douyinmind-api.onrender.com/api
+          VITE_API_BASE_URL: https://douyinmind-backend.onrender.com/api
           VITE_REQUIRE_APP_TOKEN: true
         run: npm ci && npm run build
       - name: Setup Pages
