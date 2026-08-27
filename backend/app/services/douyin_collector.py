@@ -27,6 +27,9 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+LOGIN_COOKIE_POLL_INTERVAL = 1.0
+LOGIN_SCREENSHOT_INTERVAL = 2.0
+
 
 def _find_project_chromium_executable() -> Optional[Path]:
     """在 Playwright 浏览器目录中查找 Chromium"""
@@ -284,10 +287,10 @@ class DouyinCollector:
                         found = True
                         break
                     now = time.monotonic()
-                    if now - last_capture >= 0.5:
+                    if now - last_capture >= LOGIN_SCREENSHOT_INTERVAL:
                         self._capture_login_page(page)
                         last_capture = now
-                    time.sleep(0.1)
+                    time.sleep(LOGIN_COOKIE_POLL_INTERVAL)
 
                 if not found:
                     self.status = "failed"
