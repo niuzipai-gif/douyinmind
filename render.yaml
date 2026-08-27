@@ -8,6 +8,8 @@ services:
     startCommand: cd backend && uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
       - key: DEEPSEEK_API_KEY
         sync: false
       - key: DASHSCOPE_API_KEY
