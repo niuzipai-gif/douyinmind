@@ -55,6 +55,15 @@ export async function loginQr(): Promise<Blob> {
   return res.blob();
 }
 
+export async function loginInput(
+  action: 'move' | 'down' | 'up', x: number, y: number,
+): Promise<{ success: boolean }> {
+  return request('/auth/douyin/login/input', {
+    method: 'POST',
+    body: JSON.stringify({ action, x, y }),
+  });
+}
+
 export async function logout(): Promise<{ success: boolean; message: string }> {
   return request('/auth/douyin/logout', { method: 'POST' });
 }

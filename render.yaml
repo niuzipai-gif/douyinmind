@@ -16,6 +16,8 @@ services:
         sync: false
       - key: APP_ACCESS_TOKEN
         sync: false
+      - key: DOUYIN_BRIDGE_TOKEN
+        sync: false
       - key: CORS_ALLOW_ORIGINS
         value: https://niuzipai-gif.github.io
       - key: PLAYWRIGHT_HEADLESS

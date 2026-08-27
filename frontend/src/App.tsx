@@ -13,7 +13,6 @@ export default function App() {
   const [accessError, setAccessError] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [loginBusy, setLoginBusy] = useState(false);
 
   // Poll login status
   useEffect(() => {
@@ -65,17 +64,8 @@ export default function App() {
     );
   }
 
-  const handleLogin = useCallback(async () => {
-    setLoginBusy(true);
-    try {
-      const r = await api.loginStart();
-      if (r.success) {
-        setShowLogin(true);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setLoginBusy(false);
+  const handleLogin = useCallback(() => {
+    setShowLogin(true);
   }, []);
 
   const handleLoginSuccess = useCallback(() => {
@@ -91,7 +81,7 @@ export default function App() {
   if (!loggedIn) {
     return (
       <>
-        <LandingPage onStartLogin={handleLogin} busy={loginBusy} />
+        <LandingPage onStartLogin={handleLogin} busy={false} />
         {showLogin && (
           <LoginModal
             onClose={() => setShowLogin(false)}

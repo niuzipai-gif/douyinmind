@@ -149,12 +149,12 @@ MIT
 
 ### GitHub Pages + Render
 
-1. 在 Render 创建后端 Web Service，根目录选择 `backend`，或使用仓库中的 `render.yaml`。
-2. 在 Render 环境变量中填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY`；如需保护个人站点，再设置 `APP_ACCESS_TOKEN`。
-3. 将 `.github/workflows/deploy-pages.yml` 中的 `VITE_API_BASE_URL` 改成你的 Render 服务地址并推送到 `main`。
-4. 在 GitHub 仓库 Settings → Pages → Build and deployment 中选择 GitHub Actions。
+1. Render 部署后端，填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY` 和 `DOUYIN_BRIDGE_TOKEN`。
+2. 在本机 `backend/.env` 填入同一个 `DOUYIN_BRIDGE_TOKEN`。
+3. 双击 `backend/start_local_login.cmd`，在本机浏览器扫码并完成抖音验证。
+4. 打开 GitHub Pages；登录态上传成功后，页面会自动进入知识库。
 
-当前个人站点默认不启用访问口令。如果需要重新开启保护，可在 Render 设置 `APP_ACCESS_TOKEN`，并将 Pages 构建变量 `VITE_REQUIRE_APP_TOKEN` 改为 `true`。不要把任何 API Key 写进前端代码或提交到 Git。
+当前个人站点默认不启用访问口令。抖音登录只在本机浏览器完成，登录态通过独立的 `DOUYIN_BRIDGE_TOKEN` 上传到云端；不要把任何 API Key 或桥接口令提交到 Git。
 
 ### DashScope API Key
 
