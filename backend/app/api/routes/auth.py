@@ -5,7 +5,8 @@
 """
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
 from app.services.douyin_collector import collector
 
@@ -43,6 +44,19 @@ async def login_status():
         "status": collector.status,
         "message": collector.message,
     }
+
+
+@router.get("/login/qr")
+async def login_qr():
+    """返回当前抖音登录页面截图，供前端显示二维码。"""
+    image = collector.get_qr_image()
+    if not image:
+        raise HTTPException(status_code=404, detail="二维码尚未生成")
+    return Response(
+        content=image,
+        media_type="image/png",
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @router.post("/logout")

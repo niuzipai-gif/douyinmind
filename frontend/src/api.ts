@@ -46,6 +46,15 @@ export async function loginStatus(): Promise<{ status: string; message: string }
   return request('/auth/douyin/login/status');
 }
 
+export async function loginQr(): Promise<Blob> {
+  const res = await fetch(apiUrl('/auth/douyin/login/qr'), {
+    headers: headers(),
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`${res.status}: QR code not ready`);
+  return res.blob();
+}
+
 export async function logout(): Promise<{ success: boolean; message: string }> {
   return request('/auth/douyin/logout', { method: 'POST' });
 }

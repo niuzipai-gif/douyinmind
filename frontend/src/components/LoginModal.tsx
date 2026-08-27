@@ -5,24 +5,51 @@ interface Props { onClose: () => void; onSuccess: () => void; }
 
 export default function LoginModal({ onClose, onSuccess }: Props) {
   const [status, setStatus] = useState('pending');
-  const [message, setMessage] = useState('请在打开的浏览器中扫码登录');
+  const [message, setMessage] = useState('正在生成二维码，请稍候');
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const poll = setInterval(async () => {
+    let active = true;
+    let currentQrUrl: string | null = null;
+    let successTimer: number | undefined;
+    let timer: number | undefined;
+
+    const poll = async () => {
       try {
         const s = await api.loginStatus();
+        if (!active) return;
         setMessage(s.message);
         if (s.status === 'logged_in') {
           setStatus('success');
-          setTimeout(onSuccess, 800);
-          clearInterval(poll);
+          if (timer) window.clearInterval(timer);
+          successTimer = window.setTimeout(onSuccess, 800);
         } else if (s.status === 'failed') {
           setStatus('failed');
-          clearInterval(poll);
+          if (timer) window.clearInterval(timer);
+        } else {
+          try {
+            const blob = await api.loginQr();
+            const nextQrUrl = URL.createObjectURL(blob);
+            if (!active) {
+              URL.revokeObjectURL(nextQrUrl);
+              return;
+            }
+            if (currentQrUrl) URL.revokeObjectURL(currentQrUrl);
+            currentQrUrl = nextQrUrl;
+            setQrUrl(nextQrUrl);
+          } catch { /* QR 尚未生成，继续轮询 */ }
         }
       } catch { /* ignore */ }
-    }, 1500);
-    return () => clearInterval(poll);
+    };
+
+    void poll();
+    timer = window.setInterval(poll, 1500);
+    return () => {
+      active = false;
+      if (timer) window.clearInterval(timer);
+      if (successTimer) window.clearTimeout(successTimer);
+      if (currentQrUrl) URL.revokeObjectURL(currentQrUrl);
+    };
   }, [onSuccess]);
 
   return (
@@ -36,15 +63,19 @@ export default function LoginModal({ onClose, onSuccess }: Props) {
         </h2>
 
         <div className="w-48 h-48 rounded-xl bg-black/3 flex items-center justify-center">
-          <span className="text-5xl">{status === 'pending' ? '📱' : status === 'success' ? '✅' : '❌'}</span>
+          {status === 'pending' && qrUrl ? (
+            <img src={qrUrl} alt="抖音登录二维码" className="w-full h-full rounded-xl object-contain" />
+          ) : (
+            <span className="text-5xl">{status === 'pending' ? '⏳' : status === 'success' ? '✅' : '❌'}</span>
+          )}
         </div>
 
         <p className="text-sm text-[var(--color-ink-soft)] text-center">{message}</p>
 
         <div className="w-full flex flex-col gap-2 text-xs text-[var(--color-ink-soft)]">
-          <div className="flex gap-2"><span className="text-accent font-bold">1.</span>点击「扫码登录」后浏览器自动打开</div>
-          <div className="flex gap-2"><span className="text-accent font-bold">2.</span>在浏览器中扫描抖音二维码</div>
-          <div className="flex gap-2"><span className="text-accent font-bold">3.</span>登录成功后自动开始同步收藏夹</div>
+          <div className="flex gap-2"><span className="text-accent font-bold">1.</span>用抖音 App 扫描上方二维码</div>
+          <div className="flex gap-2"><span className="text-accent font-bold">2.</span>在手机上确认登录</div>
+          <div className="flex gap-2"><span className="text-accent font-bold">3.</span>登录成功后自动同步收藏夹</div>
         </div>
 
         <button onClick={onClose} className="text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">

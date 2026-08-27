@@ -14,6 +14,7 @@ import json
 import logging
 import shutil
 import sys
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -71,6 +72,22 @@ class DouyinCollector:
         self._login_task: Optional[asyncio.Task] = None
         self.storage_state_path: Path = Path(settings.playwright_user_data_dir) / "state.json"
         self._snapshot: Optional[FavoriteScrapeSnapshot] = None
+        self._qr_image: Optional[bytes] = None
+        self._qr_lock = threading.Lock()
+
+    def set_qr_image(self, image: Optional[bytes]) -> None:
+        """更新当前登录页面截图，供云端前端展示扫码二维码。"""
+        with self._qr_lock:
+            self._qr_image = bytes(image) if image else None
+
+    def get_qr_image(self) -> Optional[bytes]:
+        """返回当前登录页面截图；尚未生成时返回 None。"""
+        with self._qr_lock:
+            return self._qr_image
+
+    def clear_qr_image(self) -> None:
+        """清理登录二维码截图。"""
+        self.set_qr_image(None)
 
     # ------------------------------------------------------------------
     # 浏览器
@@ -78,15 +95,23 @@ class DouyinCollector:
 
     def _browser_launch_kwargs(self) -> dict:
         """构建浏览器启动参数"""
+        headless = bool(settings.playwright_headless)
         executable = _find_project_chromium_executable()
         if executable:
-            return {"headless": False, "executable_path": str(executable)}
+            return {"headless": headless, "executable_path": str(executable)}
         channel = settings.playwright_browser_channel.strip()
         if channel:
-            return {"headless": False, "channel": channel}
+            return {"headless": headless, "channel": channel}
         if sys.platform == "win32":
-            return {"headless": False, "channel": "msedge"}
-        return {"headless": False}
+            return {"headless": headless, "channel": "msedge"}
+        return {"headless": headless}
+
+    def _capture_login_page(self, page) -> None:
+        """保存当前登录页截图，让远端前端可以显示二维码。"""
+        try:
+            self.set_qr_image(page.screenshot(type="png"))
+        except Exception as exc:
+            logger.warning("登录二维码截图失败: %s", exc)
 
     # ------------------------------------------------------------------
     # 登录 + 同步抓取（在同一个浏览器会话中完成）
@@ -97,8 +122,9 @@ class DouyinCollector:
         if self.status == "pending" and self._login_task and not self._login_task.done():
             return False, "登录已在进行中"
         self.status = "pending"
-        self.message = "请在打开的浏览器窗口中扫码登录抖音"
+        self.message = "正在生成二维码，请稍候"
         self._snapshot = None
+        self.clear_qr_image()
         self._login_task = asyncio.ensure_future(self._login_flow())
         return True, self.message
 
@@ -123,10 +149,12 @@ class DouyinCollector:
 
                 # 1. 等待扫码登录
                 page.goto(settings.douyin_home_url, timeout=120_000)
+                self._capture_login_page(page)
+                self.message = "请用抖音 App 扫描下方二维码登录"
                 logger.info("已打开抖音首页，等待扫码登录...")
 
                 found = False
-                for _ in range(120):
+                for index in range(120):
                     cookies = context.cookies()
                     has_login = any(
                         c.get("name") in {"sessionid", "sid_guard"} for c in cookies
@@ -134,17 +162,21 @@ class DouyinCollector:
                     if has_login:
                         found = True
                         break
+                    if index % 2 == 0:
+                        self._capture_login_page(page)
                     time.sleep(1)
 
                 if not found:
                     self.status = "failed"
                     self.message = "登录超时（120秒），请重试"
+                    self.clear_qr_image()
                     context.close()
                     return
 
                 logger.info("扫码登录成功，立即开始抓取收藏夹...")
                 self.status = "logged_in"
                 self.message = "登录成功，正在同步收藏夹..."
+                self.clear_qr_image()
 
                 # 2. 立即在同一个 context 中抓数据
                 try:
@@ -166,6 +198,7 @@ class DouyinCollector:
             logger.exception("登录流程异常")
             self.status = "failed"
             self.message = str(exc)[:500]
+            self.clear_qr_image()
 
     def _fetch_in_context(self, page) -> FavoriteScrapeSnapshot:
         """
@@ -372,6 +405,7 @@ class DouyinCollector:
             errors.append(f"清理用户数据失败: {exc}")
 
         self._snapshot = None
+        self.clear_qr_image()
         if errors:
             self.status = "failed"
             self.message = "; ".join(errors)[:1000]
