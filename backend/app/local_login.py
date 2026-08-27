@@ -98,7 +98,7 @@ def main() -> int:
         with SingleInstanceLock(
             Path(settings.playwright_user_data_dir).parent / "local_login.lock"
         ):
-            collector = DouyinCollector()
+            collector = DouyinCollector(capture_login_screenshots=False)
             print("即将打开本机抖音登录窗口，请扫码并按提示完成验证。")
             collector._login_and_fetch_sync()
 

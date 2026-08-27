@@ -70,12 +70,13 @@ class FavoriteScrapeSnapshot:
 class DouyinCollector:
     """抖音数据采集器 — 登录 + 抓取一体化"""
 
-    def __init__(self) -> None:
+    def __init__(self, *, capture_login_screenshots: bool = True) -> None:
         self.status: str = "idle"
         self.message: str = ""
         self._login_task: Optional[asyncio.Task] = None
         self.storage_state_path: Path = Path(settings.playwright_user_data_dir) / "state.json"
         self._snapshot: Optional[FavoriteScrapeSnapshot] = None
+        self._capture_login_screenshots = capture_login_screenshots
         self._qr_image: Optional[bytes] = None
         self._qr_lock = threading.Lock()
         self._login_input_queue: Queue[tuple[str, float, float]] = Queue()
@@ -270,7 +271,8 @@ class DouyinCollector:
 
                 # 1. 等待扫码登录
                 page.goto(settings.douyin_home_url, timeout=120_000)
-                self._capture_login_page(page)
+                if self._capture_login_screenshots:
+                    self._capture_login_page(page)
                 self.message = "请用抖音 App 扫描二维码；如出现滑块验证，请在下方图片上拖动"
                 logger.info("已打开抖音首页，等待扫码登录...")
 
@@ -287,7 +289,10 @@ class DouyinCollector:
                         found = True
                         break
                     now = time.monotonic()
-                    if now - last_capture >= LOGIN_SCREENSHOT_INTERVAL:
+                    if (
+                        self._capture_login_screenshots
+                        and now - last_capture >= LOGIN_SCREENSHOT_INTERVAL
+                    ):
                         self._capture_login_page(page)
                         last_capture = now
                     time.sleep(LOGIN_COOKIE_POLL_INTERVAL)
