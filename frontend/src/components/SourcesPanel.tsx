@@ -107,7 +107,7 @@ export default function SourcesPanel({ onBuildDone, selectedId, onSelectCollecti
   };
 
   const handleExport = (platformItemId: string, mode: 'original' | 'ai') => {
-    const url = `/api/knowledge/export/${platformItemId}?mode=${mode}`;
+    const url = `${api.apiUrl(`/knowledge/export/${platformItemId}`)}?mode=${mode}`;
     window.open(url, '_blank');
   };
 

@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.api.router import api_router
@@ -73,14 +74,35 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.middleware("http")
+async def access_token_middleware(request, call_next):
+    """当配置了口令时，保护所有业务 API，避免公开部署后被任意调用。"""
+    if (
+        settings.app_access_token
+        and request.url.path.startswith("/api/")
+        and request.headers.get("x-douyinmind-token") != settings.app_access_token
+    ):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "需要有效的 DouyinMind 访问口令"},
+        )
+    return await call_next(request)
+
+
+cors_origins = [
+    origin.strip()
+    for origin in settings.cors_allow_origins.split(",")
+    if origin.strip()
+]
+if not cors_origins:
+    cors_origins = ["*"]
+
 # CORS 中间件（允许前端开发服务器跨域）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

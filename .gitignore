@@ -18,6 +18,10 @@ frontend/dist/
 # 本地数据
 backend/app/storage/
 logs/
+app/
+
+# TypeScript build metadata
+*.tsbuildinfo
 
 # IDE
 .idea/

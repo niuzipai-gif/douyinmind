@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: douyinmind-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: pip install uv && uv sync --python 3.12 && PLAYWRIGHT_BROWSERS_PATH=app/storage/playwright_browsers uv run playwright install chromium
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DASHSCOPE_API_KEY
+        sync: false
+      - key: APP_ACCESS_TOKEN
+        sync: false
+      - key: CORS_ALLOW_ORIGINS
+        value: https://niuzipai-gif.github.io
+      - key: PLAYWRIGHT_HEADLESS
+        value: "true"
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: app/storage/playwright_browsers

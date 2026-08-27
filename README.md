@@ -142,3 +142,20 @@ douyinrag/
 ## License
 
 MIT
+
+## 个人部署说明
+
+本仓库是 DouyinMind 的个人部署副本：前端通过 GitHub Actions 发布到 GitHub Pages，后端部署到 Render。
+
+### GitHub Pages + Render
+
+1. 在 Render 创建后端 Web Service，根目录选择 `backend`，或使用仓库中的 `render.yaml`。
+2. 在 Render 环境变量中填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY` 和随机生成的 `APP_ACCESS_TOKEN`。
+3. 将 `.github/workflows/deploy-pages.yml` 中的 `VITE_API_BASE_URL` 改成你的 Render 服务地址并推送到 `main`。
+4. 在 GitHub 仓库 Settings → Pages → Build and deployment 中选择 GitHub Actions。
+
+`APP_ACCESS_TOKEN` 只保存在 Render；GitHub Pages 首次打开时输入一次，浏览器会保存在本机 localStorage 中。不要把任何 API Key 写进前端代码或提交到 Git。
+
+### DashScope API Key
+
+在阿里云百炼控制台的「密钥管理」中创建 API Key，选择默认业务空间即可。DouyinMind 用它做 Paraformer 语音转写和 text-embedding-v4 向量化；DeepSeek Key 仅用于对话生成。
