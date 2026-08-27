@@ -150,11 +150,11 @@ MIT
 ### GitHub Pages + Render
 
 1. 在 Render 创建后端 Web Service，根目录选择 `backend`，或使用仓库中的 `render.yaml`。
-2. 在 Render 环境变量中填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY` 和随机生成的 `APP_ACCESS_TOKEN`。
+2. 在 Render 环境变量中填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY`；如需保护个人站点，再设置 `APP_ACCESS_TOKEN`。
 3. 将 `.github/workflows/deploy-pages.yml` 中的 `VITE_API_BASE_URL` 改成你的 Render 服务地址并推送到 `main`。
 4. 在 GitHub 仓库 Settings → Pages → Build and deployment 中选择 GitHub Actions。
 
-`APP_ACCESS_TOKEN` 只保存在 Render；GitHub Pages 首次打开时输入一次，浏览器会保存在本机 localStorage 中。不要把任何 API Key 写进前端代码或提交到 Git。
+当前个人站点默认不启用访问口令。如果需要重新开启保护，可在 Render 设置 `APP_ACCESS_TOKEN`，并将 Pages 构建变量 `VITE_REQUIRE_APP_TOKEN` 改为 `true`。不要把任何 API Key 写进前端代码或提交到 Git。
 
 ### DashScope API Key
 
