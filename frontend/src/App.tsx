@@ -66,6 +66,7 @@ export default function App() {
 
   const handleLogin = useCallback(() => {
     setShowLogin(true);
+    window.open('douyinmind://login', '_blank', 'noopener,noreferrer');
   }, []);
 
   const handleLoginSuccess = useCallback(() => {

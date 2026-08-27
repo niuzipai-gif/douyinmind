@@ -150,9 +150,9 @@ MIT
 ### GitHub Pages + Render
 
 1. Render 部署后端，填写 `DEEPSEEK_API_KEY`、`DASHSCOPE_API_KEY` 和 `DOUYIN_BRIDGE_TOKEN`。
-2. 在本机 `backend/.env` 填入同一个 `DOUYIN_BRIDGE_TOKEN`。
-3. 双击 `backend/start_local_login.cmd`，在本机浏览器扫码并完成抖音验证。
-4. 打开 GitHub Pages；登录态上传成功后，页面会自动进入知识库。
+2. 在本机 `backend/.env` 填入同一个 `DOUYIN_BRIDGE_TOKEN`，并首次双击 `backend/install_douyinmind_protocol.cmd`。
+3. 打开 GitHub Pages，点击“扫码登录”，页面会自动打开本机登录助手。
+4. 在本机浏览器扫码并完成抖音验证；登录态上传成功后，页面会自动进入知识库。
 
 当前个人站点默认不启用访问口令。抖音登录只在本机浏览器完成，登录态通过独立的 `DOUYIN_BRIDGE_TOKEN` 上传到云端；不要把任何 API Key 或桥接口令提交到 Git。
 

@@ -40,6 +40,10 @@ export default function LoginModal({ onClose, onSuccess }: Props) {
     };
   }, [onSuccess]);
 
+  const launchLocalHelper = () => {
+    window.open('douyinmind://login', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
       <div
@@ -56,10 +60,19 @@ export default function LoginModal({ onClose, onSuccess }: Props) {
         </div>
 
         <div className="w-full flex flex-col gap-2 text-xs text-[var(--color-ink-soft)]">
-          <div className="flex gap-2"><span className="text-accent font-bold">1.</span>双击仓库里的 <code className="text-accent">backend\start_local_login.cmd</code></div>
+          <div className="flex gap-2"><span className="text-accent font-bold">1.</span>页面已自动尝试打开本机登录助手</div>
           <div className="flex gap-2"><span className="text-accent font-bold">2.</span>在本机浏览器扫码并完成抖音验证</div>
           <div className="flex gap-2"><span className="text-accent font-bold">3.</span>登录态上传完成后，此页面自动进入知识库</div>
         </div>
+
+        {status === 'pending' && (
+          <button
+            onClick={launchLocalHelper}
+            className="w-full rounded-xl bg-gradient-to-r from-accent to-accent-hover py-3 text-sm font-bold text-white shadow-md shadow-accent/20 hover:shadow-lg transition-all"
+          >
+            一键重新打开本机登录助手
+          </button>
+        )}
 
         <button onClick={onClose} className="text-sm text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors">
           取消
