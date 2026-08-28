@@ -23,15 +23,6 @@ class Settings(BaseSettings):
     dashscope_api_key: str = ""
     """DashScope API Key，用于 ASR 语音转写和 Embedding 向量化"""
 
-    app_access_token: str = ""
-    """可选的外部访问口令；留空时不启用 API 口令校验"""
-
-    douyin_bridge_token: str = ""
-    """本机登录助手上传会话到云端时使用的内部口令"""
-
-    cors_allow_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
-    """允许访问 API 的前端来源，多个来源用英文逗号分隔"""
-
     # ===== LLM 配置 =====
     llm_model: str = "deepseek-chat"
     """LLM 模型名称"""

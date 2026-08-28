@@ -14,11 +14,9 @@ import json
 import logging
 import shutil
 import sys
-import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from queue import Empty, Queue
 from typing import Optional
 
 from playwright.sync_api import sync_playwright
@@ -26,9 +24,6 @@ from playwright.sync_api import sync_playwright
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-
-LOGIN_COOKIE_POLL_INTERVAL = 1.0
-LOGIN_SCREENSHOT_INTERVAL = 2.0
 
 
 def _find_project_chromium_executable() -> Optional[Path]:
@@ -70,145 +65,12 @@ class FavoriteScrapeSnapshot:
 class DouyinCollector:
     """抖音数据采集器 — 登录 + 抓取一体化"""
 
-    def __init__(self, *, capture_login_screenshots: bool = True) -> None:
+    def __init__(self) -> None:
         self.status: str = "idle"
         self.message: str = ""
         self._login_task: Optional[asyncio.Task] = None
         self.storage_state_path: Path = Path(settings.playwright_user_data_dir) / "state.json"
         self._snapshot: Optional[FavoriteScrapeSnapshot] = None
-        self._capture_login_screenshots = capture_login_screenshots
-        self._qr_image: Optional[bytes] = None
-        self._qr_lock = threading.Lock()
-        self._login_input_queue: Queue[tuple[str, float, float]] = Queue()
-
-    def set_qr_image(self, image: Optional[bytes]) -> None:
-        """更新当前登录页面截图，供云端前端展示扫码二维码。"""
-        with self._qr_lock:
-            self._qr_image = bytes(image) if image else None
-
-    def get_qr_image(self) -> Optional[bytes]:
-        """返回当前登录页面截图；尚未生成时返回 None。"""
-        with self._qr_lock:
-            return self._qr_image
-
-    def clear_qr_image(self) -> None:
-        """清理登录二维码截图。"""
-        self.set_qr_image(None)
-
-    def export_bridge_payload(self) -> dict:
-        """导出本机登录后的会话和收藏快照，供云端继续处理。"""
-        if self._snapshot is None:
-            raise RuntimeError("尚未完成本机登录和收藏夹抓取")
-
-        if self.storage_state_path.exists():
-            storage_state = json.loads(
-                self.storage_state_path.read_text(encoding="utf-8")
-            )
-        else:
-            storage_state = {"cookies": [], "origins": []}
-
-        return {
-            "version": 1,
-            "storage_state": storage_state,
-            "collections": [
-                {
-                    "platform_collection_id": item.platform_collection_id,
-                    "title": item.title,
-                    "video_count": item.video_count,
-                    "cover_url": item.cover_url,
-                }
-                for item in self._snapshot.collections
-            ],
-            "videos": [
-                {
-                    "platform_item_id": item.platform_item_id,
-                    "url": item.url,
-                    "title": item.title,
-                    "author": item.author,
-                    "duration": item.duration,
-                    "collection_ids": sorted(item.collection_ids),
-                }
-                for item in self._snapshot.videos
-            ],
-        }
-
-    def import_bridge_payload(self, payload: dict) -> None:
-        """导入本机登录态和快照，让云端继续执行同步/入库。"""
-        storage_state = payload.get("storage_state")
-        if not isinstance(storage_state, dict):
-            raise ValueError("登录态格式无效")
-
-        collections: list[FavoriteScrapedCollection] = []
-        for item in payload.get("collections", []):
-            if not isinstance(item, dict):
-                continue
-            collection_id = str(item.get("platform_collection_id") or "").strip()
-            if not collection_id:
-                continue
-            collections.append(FavoriteScrapedCollection(
-                platform_collection_id=collection_id,
-                title=str(item.get("title") or "收藏夹")[:255],
-                video_count=max(int(item.get("video_count") or 0), 0),
-                cover_url=item.get("cover_url"),
-            ))
-
-        videos: list[FavoriteScrapedVideo] = []
-        for item in payload.get("videos", []):
-            if not isinstance(item, dict):
-                continue
-            item_id = str(item.get("platform_item_id") or "").strip()
-            url = str(item.get("url") or "").strip()
-            if not item_id or not url:
-                continue
-            raw_ids = item.get("collection_ids") or []
-            collection_ids = {
-                str(collection_id).strip()
-                for collection_id in raw_ids
-                if str(collection_id).strip()
-            }
-            videos.append(FavoriteScrapedVideo(
-                platform_item_id=item_id,
-                url=url,
-                title=str(item.get("title") or "Untitled")[:500],
-                author=str(item.get("author") or "")[:255],
-                duration=self._duration_to_seconds(item.get("duration")),
-                collection_ids=collection_ids,
-            ))
-
-        self.storage_state_path.parent.mkdir(parents=True, exist_ok=True)
-        self.storage_state_path.write_text(
-            json.dumps(storage_state, ensure_ascii=False), encoding="utf-8"
-        )
-        self._snapshot = FavoriteScrapeSnapshot(
-            collections=collections,
-            videos=videos,
-        )
-        self.status = "logged_in"
-        self.message = f"本机登录成功，已同步 {len(collections)} 个收藏夹，{len(videos)} 个视频"
-        self.clear_qr_image()
-
-    def enqueue_login_input(self, action: str, x: float, y: float) -> bool:
-        """把前端鼠标事件排队，避免跨线程直接操作 Playwright。"""
-        if self.status != "pending" or action not in {"move", "down", "up"}:
-            return False
-        self._login_input_queue.put((action, float(x), float(y)))
-        return True
-
-    def apply_login_inputs(self, page) -> None:
-        """在 Playwright 所在线程中执行前端传来的鼠标事件。"""
-        while True:
-            try:
-                action, x, y = self._login_input_queue.get_nowait()
-            except Empty:
-                return
-            if action == "move":
-                page.mouse.move(x, y)
-            elif action == "down":
-                page.mouse.move(x, y)
-                page.mouse.down()
-            elif action == "up":
-                page.mouse.move(x, y)
-                page.mouse.up()
 
     # ------------------------------------------------------------------
     # 浏览器
@@ -216,24 +78,15 @@ class DouyinCollector:
 
     def _browser_launch_kwargs(self) -> dict:
         """构建浏览器启动参数"""
-        headless = bool(settings.playwright_headless)
-        viewport = {"width": 900, "height": 900}
         executable = _find_project_chromium_executable()
         if executable:
-            return {"headless": headless, "viewport": viewport, "executable_path": str(executable)}
+            return {"headless": False, "executable_path": str(executable)}
         channel = settings.playwright_browser_channel.strip()
         if channel:
-            return {"headless": headless, "viewport": viewport, "channel": channel}
+            return {"headless": False, "channel": channel}
         if sys.platform == "win32":
-            return {"headless": headless, "viewport": viewport, "channel": "msedge"}
-        return {"headless": headless, "viewport": viewport}
-
-    def _capture_login_page(self, page) -> None:
-        """保存当前登录页截图，让远端前端可以显示二维码。"""
-        try:
-            self.set_qr_image(page.screenshot(type="png"))
-        except Exception as exc:
-            logger.warning("登录二维码截图失败: %s", exc)
+            return {"headless": False, "channel": "msedge"}
+        return {"headless": False}
 
     # ------------------------------------------------------------------
     # 登录 + 同步抓取（在同一个浏览器会话中完成）
@@ -244,9 +97,8 @@ class DouyinCollector:
         if self.status == "pending" and self._login_task and not self._login_task.done():
             return False, "登录已在进行中"
         self.status = "pending"
-        self.message = "正在生成二维码，请稍候"
+        self.message = "请在打开的浏览器窗口中扫码登录抖音"
         self._snapshot = None
-        self.clear_qr_image()
         self._login_task = asyncio.ensure_future(self._login_flow())
         return True, self.message
 
@@ -271,16 +123,10 @@ class DouyinCollector:
 
                 # 1. 等待扫码登录
                 page.goto(settings.douyin_home_url, timeout=120_000)
-                if self._capture_login_screenshots:
-                    self._capture_login_page(page)
-                self.message = "请用抖音 App 扫描二维码；如出现滑块验证，请在下方图片上拖动"
                 logger.info("已打开抖音首页，等待扫码登录...")
 
                 found = False
-                deadline = time.monotonic() + 120
-                last_capture = 0.0
-                while time.monotonic() < deadline:
-                    self.apply_login_inputs(page)
+                for _ in range(120):
                     cookies = context.cookies()
                     has_login = any(
                         c.get("name") in {"sessionid", "sid_guard"} for c in cookies
@@ -288,26 +134,17 @@ class DouyinCollector:
                     if has_login:
                         found = True
                         break
-                    now = time.monotonic()
-                    if (
-                        self._capture_login_screenshots
-                        and now - last_capture >= LOGIN_SCREENSHOT_INTERVAL
-                    ):
-                        self._capture_login_page(page)
-                        last_capture = now
-                    time.sleep(LOGIN_COOKIE_POLL_INTERVAL)
+                    time.sleep(1)
 
                 if not found:
                     self.status = "failed"
                     self.message = "登录超时（120秒），请重试"
-                    self.clear_qr_image()
                     context.close()
                     return
 
                 logger.info("扫码登录成功，立即开始抓取收藏夹...")
                 self.status = "logged_in"
                 self.message = "登录成功，正在同步收藏夹..."
-                self.clear_qr_image()
 
                 # 2. 立即在同一个 context 中抓数据
                 try:
@@ -329,7 +166,6 @@ class DouyinCollector:
             logger.exception("登录流程异常")
             self.status = "failed"
             self.message = str(exc)[:500]
-            self.clear_qr_image()
 
     def _fetch_in_context(self, page) -> FavoriteScrapeSnapshot:
         """
@@ -536,7 +372,6 @@ class DouyinCollector:
             errors.append(f"清理用户数据失败: {exc}")
 
         self._snapshot = None
-        self.clear_qr_image()
         if errors:
             self.status = "failed"
             self.message = "; ".join(errors)[:1000]

@@ -2,31 +2,11 @@
  * 后端 API 调用封装
  */
 
-const BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
-const ACCESS_TOKEN_KEY = 'douyinmind_access_token';
-
-export function getAccessToken(): string {
-  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
-}
-
-export function setAccessToken(token: string): void {
-  const value = token.trim();
-  if (value) localStorage.setItem(ACCESS_TOKEN_KEY, value);
-  else localStorage.removeItem(ACCESS_TOKEN_KEY);
-}
-
-export function apiUrl(path: string): string {
-  return `${BASE}${path}`;
-}
-
-function headers(): HeadersInit {
-  const token = getAccessToken();
-  return token ? { 'X-DouyinMind-Token': token } : {};
-}
+const BASE = '/api';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(apiUrl(url), {
-    headers: { 'Content-Type': 'application/json', ...headers() },
+  const res = await fetch(`${BASE}${url}`, {
+    headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   if (!res.ok) {
@@ -44,24 +24,6 @@ export async function loginStart(): Promise<{ success: boolean; message: string;
 
 export async function loginStatus(): Promise<{ status: string; message: string }> {
   return request('/auth/douyin/login/status');
-}
-
-export async function loginQr(): Promise<Blob> {
-  const res = await fetch(apiUrl('/auth/douyin/login/qr'), {
-    headers: headers(),
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`${res.status}: QR code not ready`);
-  return res.blob();
-}
-
-export async function loginInput(
-  action: 'move' | 'down' | 'up', x: number, y: number,
-): Promise<{ success: boolean }> {
-  return request('/auth/douyin/login/input', {
-    method: 'POST',
-    body: JSON.stringify({ action, x, y }),
-  });
 }
 
 export async function logout(): Promise<{ success: boolean; message: string }> {
@@ -134,9 +96,9 @@ export async function chatAsk(query: string, sessionId?: number | null, collecti
 }
 
 export async function* chatAskStream(query: string, sessionId?: number | null): AsyncGenerator<any> {
-  const res = await fetch(apiUrl('/chat/ask/stream'), {
+  const res = await fetch(`${BASE}/chat/ask/stream`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headers() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, session_id: sessionId ?? null }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
