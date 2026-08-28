@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $agent = Join-Path $PSScriptRoot "start_local_login.cmd"
-$command = "`"$env:ComSpec`" /d /c start `"DouyinMind Login`" /min `"$agent`" `"%1`""
+$command = '"' + $env:ComSpec + '" /d /s /c call "' + $agent + '" "%1"'
 $base = "HKCU:\Software\Classes\douyinmind"
 
 New-Item -Path $base -Force | Out-Null
